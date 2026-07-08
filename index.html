@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中正國中會議通知自動化系統</title>
+    <!-- Tailwind CSS for modern responsive utility design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter & Noto Sans TC -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for sleek interactive icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS to read and parse Excel files directly in browser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            font-size: 16px; /* Base font size increased for premium legibility */
+        }
+        /* Custom scrollbar for better visual feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col antialiased">
+
+    <!-- Toast Notification Element -->
+    <div id="toast" class="fixed top-6 right-6 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 ease-out bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center space-x-4">
+        <span id="toast-icon" class="text-emerald-400 text-lg"><i class="fas fa-check-circle"></i></span>
+        <span id="toast-msg" class="text-base font-semibold">這是通知訊息</span>
+    </div>
+
+    <!-- Navigation Bar -->
+    <header class="bg-gradient-to-r from-indigo-800 via-violet-800 to-purple-950 text-white shadow-xl sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-6 py-5 sm:px-8 lg:px-10 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="bg-white/10 p-3 rounded-2xl backdrop-blur-md shadow-inner">
+                    <i class="fas fa-calendar-check text-3xl text-amber-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-wider">中正國中會議通知自動化系統</h1>
+                    <p class="text-sm text-indigo-200 mt-0.5 font-medium">一鍵匯入、精確篩選、快速寄信通知與行事曆整合</p>
+                </div>
+            </div>
+            <div class="hidden md:flex items-center space-x-2 text-sm bg-indigo-950/50 px-4 py-2 rounded-full border border-indigo-400/30">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-xs font-semibold tracking-wide">本機離線安全解析</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-6 py-10 sm:px-8 lg:px-10 space-y-12">
+        
+        <!-- Progress Steps Indicator -->
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+            <div class="max-w-5xl mx-auto">
+                <div class="flex items-center justify-between relative">
+                    <!-- Progress Line -->
+                    <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-100 z-0"></div>
+                    <div id="progress-bar" class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-indigo-600 z-0 transition-all duration-500" style="width: 0%;"></div>
+
+                    <!-- Step 1 -->
+                    <div class="z-10 text-center flex flex-col items-center">
+                        <div id="step-node-1" class="w-14 h-14 rounded-full bg-indigo-600 text-white flex items-center justify-center text-lg font-bold shadow-lg transition-all duration-300 ring-4 ring-indigo-50">
+                            1
+                        </div>
+                        <span class="text-sm font-bold mt-3 text-indigo-600">匯入人員資料</span>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="z-10 text-center flex flex-col items-center">
+                        <div id="step-node-2" class="w-14 h-14 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-lg font-bold transition-all duration-300">
+                            2
+                        </div>
+                        <span id="step-text-2" class="text-sm font-medium mt-3 text-slate-500">篩選與管理</span>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="z-10 text-center flex flex-col items-center">
+                        <div id="step-node-3" class="w-14 h-14 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-lg font-bold transition-all duration-300">
+                            3
+                        </div>
+                        <span id="step-text-3" class="text-sm font-medium mt-3 text-slate-500">撰寫信件內容</span>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="z-10 text-center flex flex-col items-center">
+                        <div id="step-node-4" class="w-14 h-14 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-lg font-bold transition-all duration-300">
+                            4
+                        </div>
+                        <span id="step-text-4" class="text-sm font-medium mt-3 text-slate-500">建立行程連結</span>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="z-10 text-center flex flex-col items-center">
+                        <div id="step-node-5" class="w-14 h-14 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-lg font-bold transition-all duration-300">
+                            5
+                        </div>
+                        <span id="step-text-5" class="text-sm font-medium mt-3 text-slate-500">一鍵開啟 GMAIL</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 1: Excel Import Card -->
+        <div id="step-section-1" class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden transition-all duration-300">
+            <div class="p-8 bg-gradient-to-r from-slate-50 to-slate-100/50 border-b border-slate-100 flex justify-between items-center flex-wrap gap-4">
+                <div class="flex items-center space-x-4">
+                    <span class="bg-indigo-100 text-indigo-700 w-10 h-10 rounded-xl flex items-center justify-center font-black text-base">01</span>
+                    <div>
+                        <h2 class="font-black text-slate-950 text-xl">匯入 Excel / CSV 檔案名單</h2>
+                        <p class="text-sm text-slate-500 mt-0.5">系統將自動偵測並解析「姓名」與「電子郵件(Email)」欄位</p>
+                    </div>
+                </div>
+                
+                <!-- Import & Download Buttons Container -->
+                <div class="flex items-center gap-3 flex-wrap">
+                    <!-- Google Sheets Tutor List Import Button -->
+                    <button onclick="importTutorListDirectly()" class="inline-flex items-center space-x-2 text-sm bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 font-bold px-5 py-3 rounded-2xl shadow-sm hover:shadow transition duration-200">
+                        <i class="fab fa-google-drive text-teal-600 text-lg"></i>
+                        <span>一鍵匯入導師名單</span>
+                    </button>
+                    <!-- Demo Sample Download Button -->
+                    <button onclick="downloadSampleFile()" class="inline-flex items-center space-x-2 text-sm bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold px-5 py-3 rounded-2xl shadow-sm hover:shadow transition duration-200">
+                        <i class="fas fa-file-excel text-emerald-600 text-lg"></i>
+                        <span>下載測試範本 (Excel)</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-10">
+                <!-- Drag and Drop Area -->
+                <div id="drop-zone" class="border-2 border-dashed border-slate-200 hover:border-indigo-400 bg-slate-50/50 hover:bg-indigo-50/20 rounded-3xl p-12 text-center cursor-pointer transition-all duration-300 group">
+                    <input type="file" id="excel-file" class="hidden" accept=".xlsx, .xls, .csv">
+                    <div class="max-w-lg mx-auto space-y-5">
+                        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-100 group-hover:bg-indigo-100 transition duration-300">
+                            <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 group-hover:text-indigo-600 transition duration-300"></i>
+                        </div>
+                        <div class="space-y-1.5">
+                            <p class="text-lg font-black text-slate-800">點擊此處或將 Excel / CSV 檔案拖曳至此</p>
+                            <p class="text-sm text-slate-500">支援副檔名：.xlsx, .xls, .csv</p>
+                        </div>
+                        <div class="pt-2">
+                            <button onclick="document.getElementById('excel-file').click()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base px-6 py-3 rounded-2xl shadow-sm hover:shadow-md transition duration-200">
+                                瀏覽電腦檔案
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Parsing Stats Info (Hidden at beginning) -->
+                <div id="import-success-block" class="hidden mt-8 bg-emerald-50 border border-emerald-100 rounded-2xl p-6 flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div>
+                            <p class="text-base font-black text-emerald-900">名單解析成功！</p>
+                            <p class="text-sm text-emerald-700 mt-0.5" id="import-stats-text">共成功匯入 0 筆不重複的名單資料。</p>
+                        </div>
+                    </div>
+                    <button onclick="scrollToSection('step-section-2')" class="text-sm bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition">
+                        前往下一步驟 <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Person Selector & Manual Addition -->
+        <div id="step-section-2" class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden transition-all duration-300 opacity-50 pointer-events-none">
+            <div class="p-8 bg-gradient-to-r from-slate-50 to-slate-100/50 border-b border-slate-100 flex justify-between items-center flex-wrap gap-4">
+                <div class="flex items-center space-x-4">
+                    <span class="bg-indigo-100 text-indigo-700 w-10 h-10 rounded-xl flex items-center justify-center font-black text-base">02</span>
+                    <div>
+                        <h2 class="font-black text-slate-950 text-xl">篩選與管理人員名單</h2>
+                        <p class="text-sm text-slate-500 mt-0.5">請確認與會成員；您也可以在此手動新增個別聯絡人</p>
+                    </div>
+                </div>
+                <!-- Manual Add Toggle Button -->
+                <button onclick="toggleAddForm()" class="inline-flex items-center space-x-2 text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-5 py-3 rounded-2xl transition duration-200">
+                    <i class="fas fa-plus"></i>
+                    <span>手動新增人員</span>
+                </button>
+            </div>
+
+            <!-- Manual Add Form Block (Hidden by default) -->
+            <div id="add-person-form" class="hidden px-8 py-6 bg-indigo-50/30 border-b border-indigo-50/50 transition-all duration-300">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">與會者姓名 <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
+                                <i class="fas fa-user text-base"></i>
+                            </span>
+                            <input type="text" id="new-name" placeholder="例：王大同" class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">電子郵件信箱 <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
+                                <i class="fas fa-envelope text-base"></i>
+                            </span>
+                            <input type="email" id="new-email" placeholder="example@gmail.com" class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                        </div>
+                    </div>
+                    <div class="flex items-end space-x-3">
+                        <button onclick="addPerson()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base py-3 px-5 rounded-2xl shadow-sm transition duration-200">
+                            加入名單
+                        </button>
+                        <button onclick="toggleAddForm()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-base py-3 px-4 rounded-2xl transition duration-200">
+                            取消
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Block -->
+            <div class="p-8">
+                <!-- Action Row above table -->
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                    <div class="flex items-center space-x-3">
+                        <button onclick="selectAll(true)" class="text-sm text-indigo-700 hover:text-indigo-900 font-bold bg-indigo-50 hover:bg-indigo-100 px-4 py-2.5 rounded-xl transition">全選名單</button>
+                        <button onclick="selectAll(false)" class="text-sm text-slate-700 hover:text-slate-900 font-bold bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-xl transition">清除全選</button>
+                        <button onclick="clearAll()" class="text-sm text-rose-700 hover:text-rose-900 font-bold bg-rose-50 hover:bg-rose-100 px-4 py-2.5 rounded-xl transition">清空所有人員</button>
+                    </div>
+                    <div class="text-base font-bold text-slate-600">
+                        目前已選取 <span id="checked-count" class="text-indigo-600 font-extrabold text-lg">0</span> / <span id="total-count" class="text-slate-800 font-extrabold text-lg">0</span> 人
+                    </div>
+                </div>
+
+                <!-- Responsive Table Wrapper -->
+                <div class="border border-slate-100 rounded-2xl overflow-hidden shadow-inner max-h-[420px] overflow-y-auto">
+                    <table class="w-full text-left text-base border-collapse">
+                        <thead class="bg-slate-50/90 sticky top-0 border-b border-slate-200 z-10 shadow-[0_1px_0_0_rgba(241,245,249,1)]">
+                            <tr>
+                                <th class="w-16 px-6 py-5 text-center">
+                                    <input type="checkbox" id="header-select-all" class="w-5 h-5 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer" onchange="toggleHeaderCheckbox(this)">
+                                </th>
+                                <th class="px-8 py-5 font-black text-slate-800 text-base">姓名</th>
+                                <th class="px-8 py-5 font-black text-slate-800 text-base">電子郵件信箱 (Email)</th>
+                                <th class="px-6 py-5 text-center font-black text-slate-800 w-28 text-base">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="participant-table-body" class="divide-y divide-slate-100 bg-white">
+                            <!-- Table rows will dynamic display here -->
+                            <tr>
+                                <td colspan="4" class="text-center py-16 text-slate-400 bg-slate-50/20">
+                                    <div class="flex flex-col items-center justify-center space-y-3">
+                                        <i class="fas fa-users text-4xl text-slate-300"></i>
+                                        <p class="text-base font-bold">尚未匯入或新增與會同仁資料</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Mail Composer -->
+        <div id="step-section-3" class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden transition-all duration-300 opacity-50 pointer-events-none">
+            <div class="p-8 bg-gradient-to-r from-slate-50 to-slate-100/50 border-b border-slate-100 flex justify-between items-center flex-wrap gap-4">
+                <div class="flex items-center space-x-4">
+                    <span class="bg-indigo-100 text-indigo-700 w-10 h-10 rounded-xl flex items-center justify-center font-black text-base">03</span>
+                    <div>
+                        <h2 class="font-black text-slate-950 text-xl">撰寫會議通知內容</h2>
+                        <p class="text-sm text-slate-500 mt-0.5">自訂輸入郵件內容，亦可快速套用下方各處室專屬公文範本</p>
+                    </div>
+                </div>
+                <!-- Template selection -->
+                <div class="flex items-center space-x-3">
+                    <span class="text-sm font-bold text-slate-600"><i class="fas fa-magic text-indigo-600 text-base"></i> 信件範本：</span>
+                    <select id="template-selector" onchange="applyTemplate()" class="text-sm bg-white border border-slate-200 text-slate-800 font-bold px-4 py-3 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="custom">自訂信件</option>
+                        <option value="admin">🏢 行政會報</option>
+                        <option value="tutor">🧑‍🏫 導師會報</option>
+                        <option value="school_affair">⚖️ 校事會議</option>
+                        <option value="academic">📖 教務處會議通知</option>
+                        <option value="student_affairs">🏀 學務處會議通知</option>
+                        <option value="counseling">❤️ 輔導處會議通知</option>
+                        <option value="general_affairs">🛠️ 總務處會議通知</option>
+                        <option value="other">❓ 其他</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="p-8 space-y-8">
+                <!-- Subject & Content Inputs -->
+                <div class="grid grid-cols-1 gap-8">
+                    <div>
+                        <label class="block text-base font-bold text-slate-800 mb-3">郵件標題</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
+                                <i class="fas fa-heading text-lg"></i>
+                            </span>
+                            <input type="text" id="mail-subject" oninput="updateStepVisibility()" placeholder="請輸入郵件主旨" class="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-bold">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-base font-bold text-slate-800 mb-3 flex justify-between items-center">
+                            <span>郵件內文 (行事曆連結會自動附加在此內容底部)</span>
+                            <button onclick="copyMailBody()" class="text-sm text-indigo-600 hover:text-indigo-800 font-bold inline-flex items-center space-x-1.5 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition">
+                                <i class="far fa-copy"></i>
+                                <span>複製內文</span>
+                            </button>
+                        </label>
+                        <textarea id="mail-body" oninput="updateStepVisibility()" rows="10" placeholder="請輸入信件詳細內容，可使用上方範本快速套用填寫..." class="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none leading-relaxed font-sans"></textarea>
+                    </div>
+                </div>
+
+                <!-- Attachment Friendly Reminder Block -->
+                <div class="bg-amber-50/70 border-2 border-amber-200/60 rounded-3xl p-6 flex flex-col sm:flex-row items-start gap-4 shadow-sm">
+                    <div class="bg-amber-100 text-amber-700 p-3.5 rounded-2xl flex-shrink-0">
+                        <i class="fas fa-paperclip text-xl"></i>
+                    </div>
+                    <div class="space-y-2 flex-grow">
+                        <h4 class="text-base font-black text-amber-950 flex items-center gap-2">
+                            <span>📎 郵件附加檔案提示</span>
+                            <span class="text-xs bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full font-bold">系統安全須知</span>
+                        </h4>
+                        <p class="text-sm text-slate-700 leading-relaxed">
+                            基於網頁瀏覽器的資安防護規範，網頁系統<strong>無法直接遙控或自動上傳</strong>您電腦中的實體檔案至外部信箱。
+                        </p>
+                        <p class="text-sm font-black text-amber-900 flex items-center gap-1.5 mt-1">
+                            <i class="fas fa-lightbulb text-base"></i>
+                            <span>貼心提醒：請於第五步點選「一鍵開啟 Gmail」後，在開啟的 Gmail 撰寫視窗中自行手動拖曳夾帶檔案！</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Calendar Event Link Generator -->
+        <div id="step-section-4" class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden transition-all duration-300 opacity-50 pointer-events-none">
+            <div class="p-8 bg-gradient-to-r from-slate-50 to-slate-100/50 border-b border-slate-100 flex justify-between items-center flex-wrap gap-4">
+                <div class="flex items-center space-x-4">
+                    <span class="bg-indigo-100 text-indigo-700 w-10 h-10 rounded-xl flex items-center justify-center font-black text-base">04</span>
+                    <div>
+                        <h2 class="font-black text-slate-950 text-xl">建立行事曆活動連結</h2>
+                        <p class="text-sm text-slate-500 mt-0.5">設定會議起訖時間，自動產生一鍵加入 Google 行事曆的可點選超連結</p>
+                    </div>
+                </div>
+                <!-- Quick Sync Button -->
+                <button onclick="syncCalendarFromMail()" class="inline-flex items-center space-x-2 text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-5 py-3 rounded-2xl transition duration-200">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>同步帶入上方信件主旨與地點</span>
+                </button>
+            </div>
+
+            <div class="p-8 space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="block text-base font-bold text-slate-800 mb-3">活動名稱 <span class="text-red-500">*</span></label>
+                        <input type="text" id="cal-title" placeholder="例如：行政會報會議" class="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-base font-bold text-slate-800 mb-3">活動地點 (此欄位同步自上方信件中的會議地點)</label>
+                        <input type="text" id="cal-location" placeholder="例如：本校校長室、2樓視聽教室" class="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-semibold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="block text-base font-bold text-slate-800 mb-3">開始時間 <span class="text-red-500">*</span></label>
+                        <input type="datetime-local" id="cal-start" class="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-base font-bold text-slate-800 mb-3">結束時間 <span class="text-red-500">*</span></label>
+                        <input type="datetime-local" id="cal-end" class="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- Footer Actions: Generate Link -->
+                <div class="flex flex-col sm:flex-row justify-end items-center gap-4 pt-8 border-t border-slate-100">
+                    <button onclick="insertCalendarToMail()" class="w-full sm:w-auto inline-flex justify-center items-center space-x-2 text-base bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-4.5 rounded-2xl shadow-md transition">
+                        <i class="fas fa-calendar-plus text-lg animate-pulse"></i>
+                        <span>產生日曆連結並插入上方信件</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: One-Click Gmail Sender -->
+        <div id="step-section-5" class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden transition-all duration-300 opacity-50 pointer-events-none">
+            <div class="p-8 bg-gradient-to-r from-slate-50 to-slate-100/50 border-b border-slate-100 flex justify-between items-center flex-wrap gap-4">
+                <div class="flex items-center space-x-4">
+                    <span class="bg-indigo-100 text-indigo-700 w-10 h-10 rounded-xl flex items-center justify-center font-black text-base">05</span>
+                    <div>
+                        <h2 class="font-black text-slate-950 text-xl">一鍵開啟 GMAIL 寄信</h2>
+                        <p class="text-sm text-slate-500 mt-0.5">最後確認！將自動啟動瀏覽器中的 Gmail 視窗並為您自動填妥所有會議欄位</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-10 text-center space-y-8">
+                <div class="max-w-3xl mx-auto space-y-4">
+                    <p class="text-lg text-slate-600 leading-relaxed font-medium">
+                        系統已完全準備就緒！點擊下方按鈕，系統將自動開啟 Gmail 寫信視窗，並為您帶入選定的與會人員信件主旨、以及包含 Google 行事曆連結的完整內文。
+                    </p>
+                    
+                    <div class="bg-emerald-50 text-emerald-800 rounded-2xl p-4 inline-flex items-center space-x-3 text-sm font-semibold">
+                        <i class="fas fa-shield-alt text-lg text-emerald-600"></i>
+                        <span>安全防護：您的所有作業與名單解析皆在本機端安全運行，請放心使用。</span>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-center">
+                    <!-- Ultimate Primary Action: One-Click Gmail Send -->
+                    <button onclick="sendViaGmail()" class="w-full sm:w-auto inline-flex justify-center items-center space-x-4 text-xl bg-gradient-to-r from-rose-500 via-red-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-black px-16 py-5.5 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.03] transition transform active:scale-95">
+                        <i class="fab fa-google text-2xl animate-bounce"></i>
+                        <span>一鍵開啟 GMAIL 寄信</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-150 mt-16 py-8">
+        <div class="max-w-7xl mx-auto px-6 text-center text-sm text-slate-500 space-y-1.5">
+            <p class="font-medium">© 2026 會議通知自動化系統 · 採用前端本機離線安全解析技術，100% 個人隱私保障</p>
+            <p class="text-xs text-slate-400">設計者：C.KUO(Ver1.04 - 雲端匯入大字美化版)</p>
+        </div>
+    </footer>
+
+    <script>
+        // System Data State
+        let participants = [];
+
+        // Sample Template Data
+        const templates = {
+            custom: {
+                subject: "",
+                body: ""
+            },
+            admin: {
+                subject: "【會議通知】115學年度第[一]學期第[ ]次行政會報",
+                body: "各位主管、同仁好，\n\n本校將召開行政會報會議，請各處室主管及相關同仁準時出席：\n\n📌 會議時間：2026年 [ ]月 [ ]日 (星期[ ]) [ ]時[ ]分\n📌 會議地點：[會議室 / 線上會議]\n📌 會議主席：[校長]\n📌 報告與討論事項：\n1. 各處室重要業務工作報告（請事先提報資料）\n2. 上次會議決議執行狀況檢視\n3. 提案討論與意見交流\n4. 校長指示與臨時動議\n\n💡 備註：請各處室於[ ]月[ ]日前，將報告資料上傳至共享雲端，謝謝您的配合！\n\n主辦單位：[校長室 / 秘書處]\n聯絡人：[您的名字/分機]"
+            },
+            tutor: {
+                subject: "【會議通知】115學年度第[一]學期第[ ]次導師會報",
+                body: "各位導師、同仁好，\n\n為討論本階段班級經營、學生輔導事宜及各處室工作配合，我們將召開導師會報，請全體導師準時出席：\n\n📌 會議時間：2026年 [ ]月 [ ]日 (星期[ ]) [ ]時[ ]分\n📌 會議地點：[視聽教室 / 會議室]\n📌 與會人員：全體導師、各處室主任、相關組長\n📌 會議議程：\n1. 各處室業務推動宣導與協調\n2. 學生輔導工作與班務狀況分享\n3. 提案討論與意見交流\n\n💡 期待透過本次會報凝聚共識，共同營造溫馨安全的校園環境。感謝您的勞心勞力！\n\n主辦單位：學務處\n聯絡人：[您的名字/分機]"
+            },
+            school_affair: {
+                subject: "【重要通知】校事會議通知（請準時出席）",
+                body: "各位委員、同仁好，\n\n本校將召開校事會議，針對特定事件進行審議與釐清，請相關委員與列席同仁撥冗出席：\n\n📌 會議時間：2026年 [ ]月 [ ]日 (星期[ ]) [ ]時[ ]分\n📌 會議地點：[第 會議室]\n📌 會議議程：\n1. 事件緣由及程序說明\n2. 調查小組進度/事證報告與釐清\n3. 委員審議與意見交換\n4. 後續因應處置與決議\n\n🚨 注意：本會議涉及相關法規與學生/當事人隱私，請全體與會人員務必遵循保密規定，切勿外洩會議資訊與文件。\n\n主辦單位：[人事室 / 校事會議小組]\n聯絡人：[您的名字/分機]"
+            },
+            academic: {
+                subject: "【教務處通知】115學年度第[一]學期教務會議召開通知",
+                body: "各位老師、同仁好，\n\n教務處將召開教務會議，以研商課程發展與學術校務，請全體出席與列席同仁準時與會：\n\n📌 會議時間：2026年 [ ]月 [ ]日 (星期[ ]) [ ]時[ ]分\n📌 會議地點：[教務處會議室 / 線上會議]\n📌 會議議題：\n1. 課務與教學進度、升學輔導報告\n2. 規章修正、評量方式 or 考務規範審議\n3. 專案計畫與推動方案進度追蹤\n4. 提案討論與臨時動議\n\n💡 請各位學科召集人或相關代表準備相關簡報，感謝您的辛勞與參與！\n\n主辦單位：教務處\n聯絡人：[您的名字/分機]"
+            },
+            student_affairs: {
+                subject: "【學務處通知】學務工作與安全宣導會議通知",
+                body: "各位老師、同仁好，\n\n學務處將召開會議以生活輔導、安全維護與活動籌備工作，請相關人員準時與會：\n\n📌 會議時間：2026年 [ ]月 [ ]日 (星期[ ]) [ ]時[ ]分\n📌 會議地點：[學務處會議室]\n📌 會議焦點：\n1. 近期學生生活輔導工作與校園安全回報\n2. 大型校園活動(如運動會、校慶)籌備進度\n3. 學生輔導管教與友善校園案例研討\n4. 提案討論\n\n💡 感謝大家在第一線關懷學生，期待您的出席與寶貴建議！\n\n主辦單位：學務處\n聯絡人：[您的名字/分機]"
+            },
+            counseling: {
+                subject: "【輔導處通知】115學年度輔導會議暨個案研討會議通知",
+                body: "各位老師、輔導同仁好，\n\n輔導處將召開會議以健全三級輔導機制，並針對特殊學生與高關懷個案進行研商，請準時出席：\n\n📌 會議時間：2026年 [ ]月 [ ]日 (星期[ ]) [ ]時[ ]分\n📌 會議地點：[輔導處會議室]\n📌 會議主題：\n1. 輔導活動計畫、認輔制度推廣報告\n2. 學生適應困難、高關懷個案或特教研討\n3. 輔導知能宣導與跨處室協調\n4. 意見交流與回饋\n\n💡 提醒：為保護學生隱私，個案研討資料請務必嚴格保密，謝謝大家的攜手協助！\n\n主辦單位：輔導處\n聯絡人：[您的名字/分機]"
+            },
+            general_affairs: {
+                subject: "【總務處通知】115學年度總務工作與採購審查會議",
+                body: "各位同仁、委員好，\n\n總務處將召開會議，檢視學校環境硬體、設施設備安全及招標採購進度，請準時出席：\n\n📌 會議時間：2026年 [ ]月 [ ]日 (星期[ ]) [ ]時[ ]分\n📌 會議地點：[總務處會議室]\n📌 主要議題：\n1. 本校校舍建築、安全設施維修及巡檢狀況報告\n2. 重大採購與工程招標案進度審查\n3. 校園綠美化、防災演練硬體配套研議\n4. 提案討論\n\n💡 感謝大家共同關心學校硬體，一同打造更安全的教育環境！\n\n主辦單位：總務處\n聯絡人：[您的名字/分機]"
+            },
+            other: {
+                subject: "【會議通知】[填寫會議主題]",
+                body: "各位同仁、夥伴好，\n\n本校將召開 [ ] 會議，請相關同仁準時出席：\n\n📌 會議時間：2026年 [ ]月 [ ]日 (星期[ ]) [ ]時[ ]分\n📌 會議地點：[ ]\n📌 會議議程：\n1. [報告項目一]\n2. [提案討論二]\n3. 臨時動議\n\n💡 請與會人員於會前提早研閱相關資料，謝謝配合！\n\n主辦單位：[ ]\n聯絡人：[您的名字/分機]"
+            }
+        };
+
+        // Window Onload Initialize
+        window.onload = function() {
+            initDropZone();
+            renderTable();
+            updateStepVisibility();
+            initCalendarDefaultTime();
+        };
+
+        function initCalendarDefaultTime() {
+            const startInput = document.getElementById('cal-start');
+            const endInput = document.getElementById('cal-end');
+            
+            const now = new Date();
+            // Round to next hour
+            now.setHours(now.getHours() + 1);
+            now.setMinutes(0);
+            
+            const localStartStr = now.toISOString().slice(0, 16);
+            
+            const hourLater = new Date(now.getTime() + 60 * 60 * 1000);
+            const localEndStr = hourLater.toISOString().slice(0, 16);
+            
+            startInput.value = localStartStr;
+            endInput.value = localEndStr;
+        }
+
+        // Drag & Drop Setup
+        function initDropZone() {
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('excel-file');
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-indigo-500', 'bg-indigo-50/20');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('border-indigo-500', 'bg-indigo-50/20');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-indigo-500', 'bg-indigo-50/20');
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFileUpload(e.dataTransfer.files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0]);
+                }
+            });
+        }
+
+        // Handle Excel / CSV Local Parsing
+        function handleFileUpload(file) {
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = e.target.result;
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    processExcelData(jsonData);
+                } catch (error) {
+                    showToast("❌ 檔案解析失敗，請確認是否為正確的 Excel 或 CSV 格式", "rose-400");
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        // Parse Google Sheets directly using GViz (CSV export endpoint)
+        async function importTutorListDirectly() {
+            showToast("🔄 正在連線 Google 雲端同步導師名單...", "indigo-400");
+            const sheetId = "1_3-jS7Qa6M8Ncgc93INpd7TNzvXYdACR";
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+            
+            try {
+                // Abort mechanism for slow network
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) throw new Error("Google Sheets response error");
+                
+                const csvText = await response.text();
+                // Parse CSV utilizing SheetJS
+                const workbook = XLSX.read(csvText, { type: 'string' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                if (jsonData && jsonData.length > 0) {
+                    processExcelData(jsonData);
+                    showToast("✅ 導師名單已成功直接從雲端同步匯入！", "emerald-400");
+                } else {
+                    throw new Error("Empty data fetched");
+                }
+            } catch (error) {
+                console.warn("Direct fetch via GViz failed or blocked by CORS, trying fallback export...", error);
+                
+                try {
+                    // Try export csv fallback
+                    const fallbackUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+                    const response = await fetch(fallbackUrl);
+                    if (!response.ok) throw new Error("Fallback request failed");
+                    
+                    const csvText = await response.text();
+                    const workbook = XLSX.read(csvText, { type: 'string' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (jsonData && jsonData.length > 0) {
+                        processExcelData(jsonData);
+                        showToast("✅ 導師名單已成功從雲端備用通道同步匯入！", "emerald-400");
+                    } else {
+                        throw new Error("Fallback failed");
+                    }
+                } catch (fallbackError) {
+                    console.error("All CORS direct fetches failed. Redirecting to browser manual download...", fallbackError);
+                    
+                    // Show helpful toast and open original edit page for download
+                    showToast("⚠️ 受到瀏覽器安全限制 (CORS)，正為您開啟雲端表單網頁。請將其下載為 Excel 後拖入本系統！", "amber-500");
+                    setTimeout(() => {
+                        window.open("https://docs.google.com/spreadsheets/d/1_3-jS7Qa6M8Ncgc93INpd7TNzvXYdACR/edit?usp=sharing&ouid=103705290364389564503&rtpof=true&sd=true", "_blank");
+                    }, 2000);
+                }
+            }
+        }
+
+        // Parse standard row arrays into participants state array
+        function processExcelData(rows) {
+            if (rows.length === 0) {
+                showToast("❌ 檔案內沒有發現任何資料", "rose-400");
+                return;
+            }
+
+            // Detect headers to find Name & Email column index
+            const firstRow = rows[0].map(cell => (cell ? cell.toString().trim() : ''));
+            
+            let nameIdx = -1;
+            let emailIdx = -1;
+
+            // Search keywords in headers
+            for (let i = 0; i < firstRow.length; i++) {
+                const colName = firstRow[i].toLowerCase();
+                if (colName.includes('姓名') || colName.includes('name') || colName.includes('聯絡人')) {
+                    nameIdx = i;
+                }
+                if (colName.includes('信箱') || colName.includes('email') || colName.includes('電子郵件') || colName.includes('郵件') || colName.includes('mail')) {
+                    emailIdx = i;
+                }
+            }
+
+            // Fallback default column indexes if not matched
+            if (nameIdx === -1) nameIdx = 0;
+            if (emailIdx === -1) emailIdx = 1;
+
+            let parsedList = [];
+            // Parse remaining rows
+            for (let r = 1; r < rows.length; r++) {
+                const row = rows[r];
+                if (!row || row.length === 0) continue;
+
+                const rawName = row[nameIdx];
+                const rawEmail = row[emailIdx];
+
+                if (!rawName && !rawEmail) continue; // Skip empty row
+
+                const name = rawName ? rawName.toString().trim() : "未命名聯絡人";
+                const email = rawEmail ? rawEmail.toString().trim() : "";
+
+                // Basic validation for Email address structure
+                if (email && email.includes('@')) {
+                    parsedList.push({
+                        id: Date.now() + Math.random().toString(36).substr(2, 9),
+                        name: name,
+                        email: email,
+                        selected: true // Auto selected by default
+                    });
+                }
+            }
+
+            if (parsedList.length === 0) {
+                showToast("⚠️ 檔案中未偵測到有效的電子郵件欄位，請確認欄位標題與格式！", "amber-500");
+                return;
+            }
+
+            // Append to current participants list (avoiding exact duplicates)
+            let appendedCount = 0;
+            parsedList.forEach(item => {
+                const isDuplicate = participants.some(existing => existing.email.toLowerCase() === item.email.toLowerCase());
+                if (!isDuplicate) {
+                    participants.push(item);
+                    appendedCount++;
+                }
+            });
+
+            showToast(`✅ 成功匯入 ${appendedCount} 筆新人員！`, "emerald-400");
+            
+            // Show Excel Parser Success Banner
+            const statsText = document.getElementById('import-stats-text');
+            statsText.innerText = `共成功匯入並解析 ${appendedCount} 筆不重複的人員資料，已動態追加至清單中。`;
+            document.getElementById('import-success-block').classList.remove('hidden');
+
+            renderTable();
+            updateStepVisibility();
+        }
+
+        // Render step 2 table
+        function renderTable() {
+            const tableBody = document.getElementById('participant-table-body');
+            const totalCountSpan = document.getElementById('total-count');
+            const checkedCountSpan = document.getElementById('checked-count');
+            const headerCheckbox = document.getElementById('header-select-all');
+
+            if (participants.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-10 text-slate-400 bg-slate-50/20">
+                            <div class="flex flex-col items-center justify-center space-y-2">
+                                <i class="fas fa-users text-3xl text-slate-300"></i>
+                                <p class="text-sm font-medium">尚未匯入或新增人員</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                totalCountSpan.innerText = "0";
+                checkedCountSpan.innerText = "0";
+                headerCheckbox.checked = false;
+                return;
+            }
+
+            let rowsHtml = '';
+            let selectedCount = 0;
+
+            participants.forEach((person, index) => {
+                if (person.selected) selectedCount++;
+                
+                rowsHtml += `
+                    <tr class="hover:bg-slate-50/80 transition duration-150 ${person.selected ? 'bg-indigo-50/10' : ''}">
+                        <td class="px-6 py-3 text-center">
+                            <input type="checkbox" class="w-4.5 h-4.5 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer" 
+                                   ${person.selected ? 'checked' : ''} onchange="togglePersonSelection('${person.id}', this.checked)">
+                        </td>
+                        <td class="px-6 py-3">
+                            <div class="font-medium text-slate-900">${escapeHTML(person.name)}</div>
+                        </td>
+                        <td class="px-6 py-3">
+                            <div class="text-slate-500 font-mono text-xs flex items-center space-x-1.5">
+                                <i class="far fa-envelope text-slate-400 text-sm"></i>
+                                <span>${escapeHTML(person.email)}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-3 text-center">
+                            <button onclick="deletePerson('${person.id}')" class="text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 p-1.5 rounded-lg transition" title="刪除">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableBody.innerHTML = rowsHtml;
+            totalCountSpan.innerText = participants.length;
+            checkedCountSpan.innerText = selectedCount;
+
+            // Sync Header Checkbox
+            headerCheckbox.checked = (selectedCount === participants.length && participants.length > 0);
+        }
+
+        // Toggle Single Person Selection
+        function togglePersonSelection(id, isChecked) {
+            const index = participants.findIndex(p => p.id === id);
+            if (index !== -1) {
+                participants[index].selected = isChecked;
+                renderTable();
+                updateStepVisibility();
+            }
+        }
+
+        // Toggle Header Checkbox (Select/Deselect All)
+        function toggleHeaderCheckbox(el) {
+            selectAll(el.checked);
+        }
+
+        // Select All / Deselect All
+        function selectAll(val) {
+            participants.forEach(p => p.selected = val);
+            renderTable();
+            updateStepVisibility();
+        }
+
+        // Delete Individual Person
+        function deletePerson(id) {
+            participants = participants.filter(p => p.id !== id);
+            renderTable();
+            updateStepVisibility();
+            showToast("聯絡人已成功刪除", "slate-600");
+        }
+
+        // Clear All Participants
+        function clearAll() {
+            if (participants.length === 0) return;
+            participants = [];
+            renderTable();
+            updateStepVisibility();
+            showToast("🧹 已清空所有名單資料", "slate-600");
+        }
+
+        // Toggle manual form display
+        function toggleAddForm() {
+            const form = document.getElementById('add-person-form');
+            form.classList.toggle('hidden');
+        }
+
+        // Manually append a person to the array
+        function addPerson() {
+            const nameInput = document.getElementById('new-name');
+            const emailInput = document.getElementById('new-email');
+
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
+
+            if (!name) {
+                showToast("⚠️ 請輸入人員姓名！", "amber-500");
+                nameInput.focus();
+                return;
+            }
+
+            if (!email || !email.includes('@')) {
+                showToast("⚠️ 請輸入有效的電子郵件地址！", "amber-500");
+                emailInput.focus();
+                return;
+            }
+
+            // Check duplicate email
+            const isDuplicate = participants.some(existing => existing.email.toLowerCase() === email.toLowerCase());
+            if (isDuplicate) {
+                showToast("⚠️ 此電子郵件信箱已存在名單中！", "amber-500");
+                return;
+            }
+
+            // Add new element to beginning
+            participants.unshift({
+                id: Date.now() + Math.random().toString(36).substr(2, 9),
+                name: name,
+                email: email,
+                selected: true
+            });
+
+            // Reset Form Inputs
+            nameInput.value = '';
+            emailInput.value = '';
+
+            renderTable();
+            updateStepVisibility();
+            showToast(`✅ 已新增 ${name} 到名單中`, "emerald-400");
+        }
+
+        // Dynamic step progress updater
+        function updateStepVisibility() {
+            const hasData = participants.length > 0;
+            const hasChecked = participants.some(p => p.selected);
+
+            // Step 2 Control
+            const step2 = document.getElementById('step-section-2');
+            const stepNode2 = document.getElementById('step-node-2');
+            const stepText2 = document.getElementById('step-text-2');
+
+            if (hasData) {
+                step2.classList.remove('opacity-50', 'pointer-events-none');
+                stepNode2.classList.remove('bg-slate-200', 'text-slate-600');
+                stepNode2.classList.add('bg-indigo-600', 'text-white', 'ring-4', 'ring-indigo-50');
+                stepText2.classList.remove('text-slate-500');
+                stepText2.classList.add('text-indigo-600', 'font-semibold');
+            } else {
+                step2.classList.add('opacity-50', 'pointer-events-none');
+                stepNode2.classList.add('bg-slate-200', 'text-slate-600');
+                stepNode2.classList.remove('bg-indigo-600', 'text-white', 'ring-4', 'ring-indigo-50');
+                stepText2.classList.add('text-slate-500');
+                stepText2.classList.remove('text-indigo-600', 'font-semibold');
+            }
+
+            // Step 3 Control
+            const step3 = document.getElementById('step-section-3');
+            const stepNode3 = document.getElementById('step-node-3');
+            const stepText3 = document.getElementById('step-text-3');
+
+            // Step 4 Control
+            const step4 = document.getElementById('step-section-4');
+            const stepNode4 = document.getElementById('step-node-4');
+            const stepText4 = document.getElementById('step-text-4');
+
+            // Step 5 Control
+            const step5 = document.getElementById('step-section-5');
+            const stepNode5 = document.getElementById('step-node-5');
+            const stepText5 = document.getElementById('step-text-5');
+
+            const progressBar = document.getElementById('progress-bar');
+
+            if (hasData && hasChecked) {
+                // Unlock Step 3
+                step3.classList.remove('opacity-50', 'pointer-events-none');
+                stepNode3.classList.remove('bg-slate-200', 'text-slate-600');
+                stepNode3.classList.add('bg-indigo-600', 'text-white', 'ring-4', 'ring-indigo-50');
+                stepText3.classList.remove('text-slate-500');
+                stepText3.classList.add('text-indigo-600', 'font-semibold');
+
+                // Unlock Step 4
+                step4.classList.remove('opacity-50', 'pointer-events-none');
+                stepNode4.classList.remove('bg-slate-200', 'text-slate-600');
+                stepNode4.classList.add('bg-indigo-600', 'text-white', 'ring-4', 'ring-indigo-50');
+                stepText4.classList.remove('text-slate-500');
+                stepText4.classList.add('text-indigo-600', 'font-semibold');
+
+                // Dynamic unlock for Step 5 based on mail content presence
+                const subject = document.getElementById('mail-subject').value.trim();
+                const body = document.getElementById('mail-body').value.trim();
+
+                if (subject && body) {
+                    step5.classList.remove('opacity-50', 'pointer-events-none');
+                    stepNode5.classList.remove('bg-slate-200', 'text-slate-600');
+                    stepNode5.classList.add('bg-indigo-600', 'text-white', 'ring-4', 'ring-indigo-50');
+                    stepText5.classList.remove('text-slate-500');
+                    stepText5.classList.add('text-indigo-600', 'font-semibold');
+                    progressBar.style.width = "100%";
+                } else {
+                    step5.classList.add('opacity-50', 'pointer-events-none');
+                    stepNode5.classList.add('bg-slate-200', 'text-slate-600');
+                    stepNode5.classList.remove('bg-indigo-600', 'text-white', 'ring-4', 'ring-indigo-50');
+                    stepText5.classList.add('text-slate-500');
+                    stepText5.classList.remove('text-indigo-600', 'font-semibold');
+                    progressBar.style.width = "75%";
+                }
+            } else {
+                step3.classList.add('opacity-50', 'pointer-events-none');
+                stepNode3.classList.add('bg-slate-200', 'text-slate-600');
+                stepNode3.classList.remove('bg-indigo-600', 'text-white', 'ring-4', 'ring-indigo-50');
+                stepText3.classList.add('text-slate-500');
+                stepText3.classList.remove('text-indigo-600', 'font-semibold');
+
+                step4.classList.add('opacity-50', 'pointer-events-none');
+                stepNode4.classList.add('bg-slate-200', 'text-slate-600');
+                stepNode4.classList.remove('bg-indigo-600', 'text-white', 'ring-4', 'ring-indigo-50');
+                stepText4.classList.add('text-slate-500');
+                stepText4.classList.remove('text-indigo-600', 'font-semibold');
+
+                step5.classList.add('opacity-50', 'pointer-events-none');
+                stepNode5.classList.add('bg-slate-200', 'text-slate-600');
+                stepNode5.classList.remove('bg-indigo-600', 'text-white', 'ring-4', 'ring-indigo-50');
+                stepText5.classList.add('text-slate-500');
+                stepText5.classList.remove('text-indigo-600', 'font-semibold');
+
+                progressBar.style.width = hasData ? "25%" : "0%";
+            }
+        }
+
+        // Apply pre-designed meeting email templates
+        function applyTemplate() {
+            const selector = document.getElementById('template-selector');
+            const subjectInput = document.getElementById('mail-subject');
+            const bodyTextarea = document.getElementById('mail-body');
+            const selectedValue = selector.value;
+
+            if (templates[selectedValue]) {
+                subjectInput.value = templates[selectedValue].subject;
+                bodyTextarea.value = templates[selectedValue].body;
+                if (selectedValue !== 'custom') {
+                    showToast("✨ 已套用會議範本，請調整括弧內容！", "indigo-400");
+                }
+                updateStepVisibility();
+            }
+        }
+
+        // Formulate Selected Emails String
+        function getSelectedEmails() {
+            return participants.filter(p => p.selected).map(p => p.email);
+        }
+
+        // Mail Validation Checker
+        function validateMailInputs(emails, subject, body) {
+            if (emails.length === 0) {
+                showToast("⚠️ 請先在第二步勾選至少一位參與會議的人員！", "amber-500");
+                scrollToSection('step-section-2');
+                return false;
+            }
+            if (!subject) {
+                showToast("⚠️ 請輸入信件標題！", "amber-500");
+                document.getElementById('mail-subject').focus();
+                return false;
+            }
+            if (!body) {
+                showToast("⚠️ 請輸入信件內文！", "amber-500");
+                document.getElementById('mail-body').focus();
+                return false;
+            }
+            return true;
+        }
+
+        // Open Web Gmail Client with Prepared Parameters
+        function sendViaGmail() {
+            const emails = getSelectedEmails();
+            const subject = document.getElementById('mail-subject').value.trim();
+            const body = document.getElementById('mail-body').value.trim();
+
+            if (!validateMailInputs(emails, subject, body)) return;
+
+            // Copy mail content to clipboard as a helpful fallback for user
+            copyTextToClipboard(body, false);
+
+            const bccEmails = emails.join(',');
+            const encodedSubject = encodeURIComponent(subject);
+            const encodedBody = encodeURIComponent(body);
+
+            // Construct Direct Gmail Web Link (utilizing bcc to keep user privacy)
+            const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${bccEmails}&su=${encodedSubject}&body=${encodedBody}`;
+
+            showToast("🚀 正在啟動 Gmail 系統...", "emerald-400");
+            
+            setTimeout(() => {
+                window.open(gmailUrl, '_blank');
+            }, 500);
+        }
+
+        // Clipboard Helper for Subject Body
+        function copyMailBody() {
+            const body = document.getElementById('mail-body').value.trim();
+            if (!body) {
+                showToast("⚠️ 內文沒有任何字元可供複製！", "amber-500");
+                return;
+            }
+            copyTextToClipboard(body, true);
+        }
+
+        // Standard Cross-Browser Clipboard Executer (Suited for iFrame Sandbox)
+        function copyTextToClipboard(text, verbose) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed"; // Avoid scrolling page
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (verbose) {
+                    if (successful) {
+                        showToast("📋 內容已成功複製到您的剪貼簿！", "emerald-400");
+                    } else {
+                        showToast("❌ 複製失敗，請手動選取複製", "rose-400");
+                    }
+                }
+            } catch (err) {
+                if (verbose) showToast("❌ 系統限制複製失敗", "rose-400");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // Create CSV Content & Download Trigger for testing
+        function downloadSampleFile() {
+            const sampleContent = "\ufeff" + "姓名,電子郵件(Email)\n" +
+                                 "王大明,taming.wang@example.com\n" +
+                                 "李美婷,meiting.lee@example.com\n" +
+                                 "林科特,tech.lin@example.com\n" +
+                                 "張小美,xiaomei.chang@example.com";
+            
+            const blob = new Blob([sampleContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "會議通知人員名單範本.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("📥 測試範本 CSV 檔案下載成功！", "emerald-400");
+        }
+
+        // Elegant Scroll To Element Target
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // Sync Calendar Info from Step 3 Mail Data
+        function syncCalendarFromMail() {
+            const subject = document.getElementById('mail-subject').value.trim();
+            const body = document.getElementById('mail-body').value.trim();
+
+            if (!subject) {
+                showToast("⚠️ 偵測不到上方郵件標題，請填寫郵件標題後再進行同步！", "amber-500");
+                return;
+            }
+
+            document.getElementById('cal-title').value = subject;
+            
+            // Try to extract "會議地點" or "地點" from the email body
+            const locationMatch = body.match(/(?:📌\s*)?會議地點[：:]\s*([^\r\n]+)/) || body.match(/(?:📌\s*)?地點[：:]\s*([^\r\n]+)/);
+            if (locationMatch && locationMatch[1]) {
+                document.getElementById('cal-location').value = locationMatch[1].trim();
+            }
+
+            showToast("🔄 已成功自上方信件帶入會議主旨與地點內容！", "emerald-400");
+        }
+
+        // Convert Local datetime-local input string to UTC string for Google Calendar (format: YYYYMMDDTHHmmSSZ)
+        function formatUTC(dateString) {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '';
+            return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        }
+
+        // Generate Google Calendar render URL (removed details parameter to keep URL extremely short)
+        function makeGoogleCalendarUrl(title, start, end, details, location) {
+            const base = "https://calendar.google.com/calendar/render?action=TEMPLATE";
+            const t = encodeURIComponent(title);
+            const d = formatUTC(start) + "/" + formatUTC(end);
+            const loc = encodeURIComponent(location);
+            return `${base}&text=${t}&dates=${d}&location=${loc}`;
+        }
+
+        // Insert Formulated Calendar Link block to Step 3 Mailbox Area
+        function insertCalendarToMail() {
+            const title = document.getElementById('cal-title').value.trim();
+            const start = document.getElementById('cal-start').value;
+            const end = document.getElementById('cal-end').value;
+            const location = document.getElementById('cal-location').value.trim();
+
+            if (!title) {
+                showToast("⚠️ 請填寫活動名稱！", "amber-500");
+                document.getElementById('cal-title').focus();
+                return;
+            }
+            if (!start || !end) {
+                showToast("⚠️ 請指定會議的開始與結束時間！", "amber-500");
+                return;
+            }
+            
+            // Verify end is later than start
+            if (new Date(start) >= new Date(end)) {
+                showToast("⚠️ 結束時間不能早於或等於開始時間！", "amber-500");
+                return;
+            }
+
+            // Generate URL with empty description to guarantee extremely short URLs for maximum Gmail stability
+            const gCalUrl = makeGoogleCalendarUrl(title, start, end, "", location);
+
+            // Format nicely for user readability inside the mail
+            const formatLocalTime = (dateTimeStr) => {
+                const d = new Date(dateTimeStr);
+                return d.getFullYear() + '/' + 
+                       String(d.getMonth() + 1).padStart(2, '0') + '/' + 
+                       String(d.getDate()).padStart(2, '0') + ' ' + 
+                       String(d.getHours()).padStart(2, '0') + ':' + 
+                       String(d.getMinutes()).padStart(2, '0');
+            };
+
+            const timeStr = `${formatLocalTime(start)} ~ ${formatLocalTime(end)}`;
+
+            // Create formatted text template (Gmail automatically links absolute HTTP/HTTPS URLs upon sending)
+            const calendarBlock = 
+`--------------------------------------------------
+📅 會議行程：${title}
+⏰ 時間：${timeStr}
+📍 地點：${location || '未提供'}
+🔗 快速加入 Google 行事曆 (收件同仁可直接點選下方連結)：
+${gCalUrl}
+--------------------------------------------------`;
+
+            const mailBodyEl = document.getElementById('mail-body');
+            let currentBody = mailBodyEl.value;
+
+            // Search if there is already an existing calendar block to avoid duplicate appends
+            const markerStart = "--------------------------------------------------\n📅 會議行程：";
+            const markerEnd = "--------------------------------------------------";
+            const startIndex = currentBody.indexOf(markerStart);
+            
+            if (startIndex !== -1) {
+                const endIndex = currentBody.indexOf(markerEnd, startIndex + markerStart.length);
+                if (endIndex !== -1) {
+                    // Replace the existing block
+                    currentBody = currentBody.substring(0, startIndex) + calendarBlock + currentBody.substring(endIndex + markerEnd.length);
+                    mailBodyEl.value = currentBody;
+                    showToast("✨ 上方信件中的 Google 行事曆連結已成功更新！", "emerald-400");
+                    updateStepVisibility();
+                    scrollToSection('step-section-3');
+                    return;
+                }
+            }
+
+            // Append at the bottom if no existing block found
+            mailBodyEl.value = currentBody ? currentBody + "\n\n" + calendarBlock : calendarBlock;
+            showToast("📝 Google 行事曆連結已成功附加至上方信件內文底部！", "emerald-400");
+            updateStepVisibility();
+            scrollToSection('step-section-3');
+        }
+
+        // Toast Alert Presentation
+        function showToast(message, colorClass) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.innerText = message;
+            
+            // Handle Icons Base on Status
+            if (message.includes('❌')) {
+                toastIcon.innerHTML = `<i class="fas fa-exclamation-circle text-rose-400 text-lg"></i>`;
+            } else if (message.includes('⚠️')) {
+                toastIcon.innerHTML = `<i class="fas fa-exclamation-triangle text-amber-400 text-lg"></i>`;
+            } else if (message.includes('📋') || message.includes('✨') || message.includes('🔄')) {
+                toastIcon.innerHTML = `<i class="fas fa-spinner fa-spin text-teal-400 text-lg"></i>`;
+            } else {
+                toastIcon.innerHTML = `<i class="fas fa-check-circle text-emerald-400 text-lg"></i>`;
+            }
+
+            // Animation classes toggler
+            toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-100px]', 'opacity-0');
+            }, 3500);
+        }
+
+        // Simple HTML Escaping for Security
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
