@@ -123,16 +123,16 @@
                     <span class="bg-indigo-100 text-indigo-700 w-10 h-10 rounded-xl flex items-center justify-center font-black text-base">01</span>
                     <div>
                         <h2 class="font-black text-slate-950 text-xl">匯入 Excel / CSV 檔案名單</h2>
-                        <p class="text-sm text-slate-500 mt-0.5">系統將自動偵測並解析「姓名」與「電子郵件(Email)」欄位</p>
+                        <p class="text-sm text-slate-500 mt-0.5">系統將自動偵測並解析「單位」、「姓名」與「中正信箱」欄位</p>
                     </div>
                 </div>
                 
                 <!-- Import & Download Buttons Container -->
                 <div class="flex items-center gap-3 flex-wrap">
-                    <!-- Google Sheets Tutor List Import Button -->
-                    <button onclick="importTutorListDirectly()" class="inline-flex items-center space-x-2 text-sm bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 font-bold px-5 py-3 rounded-2xl shadow-sm hover:shadow transition duration-200">
+                    <!-- Google Sheets All Staff List Import Button -->
+                    <button onclick="importSchoolListDirectly()" class="inline-flex items-center space-x-2 text-sm bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 font-bold px-5 py-3 rounded-2xl shadow-sm hover:shadow transition duration-200">
                         <i class="fab fa-google-drive text-teal-600 text-lg"></i>
-                        <span>一鍵匯入導師名單</span>
+                        <span>一鍵匯入全校人員</span>
                     </button>
                     <!-- Demo Sample Download Button -->
                     <button onclick="downloadSampleFile()" class="inline-flex items-center space-x-2 text-sm bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold px-5 py-3 rounded-2xl shadow-sm hover:shadow transition duration-200">
@@ -199,7 +199,16 @@
 
             <!-- Manual Add Form Block (Hidden by default) -->
             <div id="add-person-form" class="hidden px-8 py-6 bg-indigo-50/30 border-b border-indigo-50/50 transition-all duration-300">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">單位/處室 <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
+                                <i class="fas fa-building text-base"></i>
+                            </span>
+                            <input type="text" id="new-unit" placeholder="例：教務處" class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                        </div>
+                    </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">與會者姓名 <span class="text-red-500">*</span></label>
                         <div class="relative">
@@ -210,12 +219,12 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">電子郵件信箱 <span class="text-red-500">*</span></label>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">中正信箱 <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
                                 <i class="fas fa-envelope text-base"></i>
                             </span>
-                            <input type="email" id="new-email" placeholder="example@gmail.com" class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                            <input type="email" id="new-email" placeholder="example@ccjh.tp.edu.tw" class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
                         </div>
                     </div>
                     <div class="flex items-end space-x-3">
@@ -251,15 +260,16 @@
                                 <th class="w-16 px-6 py-5 text-center">
                                     <input type="checkbox" id="header-select-all" class="w-5 h-5 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer" onchange="toggleHeaderCheckbox(this)">
                                 </th>
+                                <th class="px-8 py-5 font-black text-slate-800 text-base">單位</th>
                                 <th class="px-8 py-5 font-black text-slate-800 text-base">姓名</th>
-                                <th class="px-8 py-5 font-black text-slate-800 text-base">電子郵件信箱 (Email)</th>
+                                <th class="px-8 py-5 font-black text-slate-800 text-base">中正信箱 (Email)</th>
                                 <th class="px-6 py-5 text-center font-black text-slate-800 w-28 text-base">操作</th>
                             </tr>
                         </thead>
                         <tbody id="participant-table-body" class="divide-y divide-slate-100 bg-white">
                             <!-- Table rows will dynamic display here -->
                             <tr>
-                                <td colspan="4" class="text-center py-16 text-slate-400 bg-slate-50/20">
+                                <td colspan="5" class="text-center py-16 text-slate-400 bg-slate-50/20">
                                     <div class="flex flex-col items-center justify-center space-y-3">
                                         <i class="fas fa-users text-4xl text-slate-300"></i>
                                         <p class="text-base font-bold">尚未匯入或新增與會同仁資料</p>
@@ -435,7 +445,7 @@
     <footer class="bg-white border-t border-slate-150 mt-16 py-8">
         <div class="max-w-7xl mx-auto px-6 text-center text-sm text-slate-500 space-y-1.5">
             <p class="font-medium">© 2026 會議通知自動化系統 · 採用前端本機離線安全解析技術，100% 個人隱私保障</p>
-            <p class="text-xs text-slate-400">設計者：C.KUO(Ver1.04 - 雲端匯入大字美化版)</p>
+            <p class="text-xs text-slate-400">設計者：C.KUO(Ver1.05 - 全校名單大字美化版)</p>
         </div>
     </footer>
 
@@ -471,7 +481,7 @@
             },
             counseling: {
                 subject: "【輔導處通知】115學年度輔導會議暨個案研討會議通知",
-                body: "各位老師、輔導同仁好，\n\n輔導處將召開會議以健全三級輔導機制，並針對特殊學生與高關懷個案進行研商，請準時出席：\n\n📌 會議時間：2026年 [ ]月 [ ]日 (星期[ ]) [ ]時[ ]分\n📌 會議地點：[輔導處會議室]\n📌 會議主題：\n1. 輔導活動計畫、認輔制度推廣報告\n2. 學生適應困難、高關懷個案或特教研討\n3. 輔導知能宣導與跨處室協調\n4. 意見交流與回饋\n\n💡 提醒：為保護學生隱私，個案研討資料請務必嚴格保密，謝謝大家的攜手協助！\n\n主辦單位：輔導處\n聯絡人：[您的名字/分機]"
+                body: "各位老師、輔導同仁好，\n\n輔導處將召開會議以健全三級輔導機制，並針對特殊學生與高關懷個案進行研商，請準時出席：\n\n📌 會議時間：2026年 [ ]月 [ ]日 (星期[ ]) [ ]時[ ]分\n📌 會議地點：[輔導處會議室]\n📌 會議主題：\n1. 輔導活動計畫、認輔制度推廣報告\n2. 學生適應困難、高關懷個案 or 特教研討\n3. 輔導知能宣導與跨處室協調\n4. 意見交流與回饋\n\n💡 提醒：為保護學生隱私，個案研討資料請務必嚴格保密，謝謝大家的攜手協助！\n\n主辦單位：輔導處\n聯絡人：[您的名字/分機]"
             },
             general_affairs: {
                 subject: "【總務處通知】115學年度總務工作與採購審查會議",
@@ -560,10 +570,10 @@
             reader.readAsBinaryString(file);
         }
 
-        // Parse Google Sheets directly using GViz (CSV export endpoint)
-        async function importTutorListDirectly() {
-            showToast("🔄 正在連線 Google 雲端同步導師名單...", "indigo-400");
-            const sheetId = "1_3-jS7Qa6M8Ncgc93INpd7TNzvXYdACR";
+        // Parse Google Sheets directly using GViz (CSV export endpoint) - Updated for all staff list
+        async function importSchoolListDirectly() {
+            showToast("🔄 正在連線 Google 雲端同步全校人員名單...", "indigo-400");
+            const sheetId = "1OtNxxsQXhQjcbw40bVcN90xQSH0LVY72";
             const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
             
             try {
@@ -585,7 +595,7 @@
                 
                 if (jsonData && jsonData.length > 0) {
                     processExcelData(jsonData);
-                    showToast("✅ 導師名單已成功直接從雲端同步匯入！", "emerald-400");
+                    showToast("✅ 全校人員名單已成功直接從雲端同步匯入！", "emerald-400");
                 } else {
                     throw new Error("Empty data fetched");
                 }
@@ -606,7 +616,7 @@
                     
                     if (jsonData && jsonData.length > 0) {
                         processExcelData(jsonData);
-                        showToast("✅ 導師名單已成功從雲端備用通道同步匯入！", "emerald-400");
+                        showToast("✅ 全校人員名單已成功從雲端備用通道同步匯入！", "emerald-400");
                     } else {
                         throw new Error("Fallback failed");
                     }
@@ -616,39 +626,44 @@
                     // Show helpful toast and open original edit page for download
                     showToast("⚠️ 受到瀏覽器安全限制 (CORS)，正為您開啟雲端表單網頁。請將其下載為 Excel 後拖入本系統！", "amber-500");
                     setTimeout(() => {
-                        window.open("https://docs.google.com/spreadsheets/d/1_3-jS7Qa6M8Ncgc93INpd7TNzvXYdACR/edit?usp=sharing&ouid=103705290364389564503&rtpof=true&sd=true", "_blank");
+                        window.open("https://docs.google.com/spreadsheets/d/1OtNxxsQXhQjcbw40bVcN90xQSH0LVY72/edit?usp=sharing&ouid=103705290364389564503&rtpof=true&sd=true", "_blank");
                     }, 2000);
                 }
             }
         }
 
-        // Parse standard row arrays into participants state array
+        // Parse standard row arrays into participants state array (Supports Unit, Name, Email)
         function processExcelData(rows) {
             if (rows.length === 0) {
                 showToast("❌ 檔案內沒有發現任何資料", "rose-400");
                 return;
             }
 
-            // Detect headers to find Name & Email column index
+            // Detect headers to find Unit, Name & Email column index
             const firstRow = rows[0].map(cell => (cell ? cell.toString().trim() : ''));
             
+            let unitIdx = -1;
             let nameIdx = -1;
             let emailIdx = -1;
 
             // Search keywords in headers
             for (let i = 0; i < firstRow.length; i++) {
                 const colName = firstRow[i].toLowerCase();
+                if (colName.includes('單位') || colName.includes('處室') || colName.includes('department') || colName.includes('unit') || colName.includes('組別')) {
+                    unitIdx = i;
+                }
                 if (colName.includes('姓名') || colName.includes('name') || colName.includes('聯絡人')) {
                     nameIdx = i;
                 }
-                if (colName.includes('信箱') || colName.includes('email') || colName.includes('電子郵件') || colName.includes('郵件') || colName.includes('mail')) {
+                if (colName.includes('中正信箱') || colName.includes('信箱') || colName.includes('email') || colName.includes('郵件') || colName.includes('mail')) {
                     emailIdx = i;
                 }
             }
 
             // Fallback default column indexes if not matched
-            if (nameIdx === -1) nameIdx = 0;
-            if (emailIdx === -1) emailIdx = 1;
+            if (unitIdx === -1) unitIdx = 0;
+            if (nameIdx === -1) nameIdx = 1;
+            if (emailIdx === -1) emailIdx = 2;
 
             let parsedList = [];
             // Parse remaining rows
@@ -656,11 +671,13 @@
                 const row = rows[r];
                 if (!row || row.length === 0) continue;
 
+                const rawUnit = row[unitIdx];
                 const rawName = row[nameIdx];
                 const rawEmail = row[emailIdx];
 
                 if (!rawName && !rawEmail) continue; // Skip empty row
 
+                const unit = rawUnit ? rawUnit.toString().trim() : "全校同仁";
                 const name = rawName ? rawName.toString().trim() : "未命名聯絡人";
                 const email = rawEmail ? rawEmail.toString().trim() : "";
 
@@ -668,6 +685,7 @@
                 if (email && email.includes('@')) {
                     parsedList.push({
                         id: Date.now() + Math.random().toString(36).substr(2, 9),
+                        unit: unit,
                         name: name,
                         email: email,
                         selected: true // Auto selected by default
@@ -701,7 +719,7 @@
             updateStepVisibility();
         }
 
-        // Render step 2 table
+        // Render step 2 table with Unit, Name, and Email
         function renderTable() {
             const tableBody = document.getElementById('participant-table-body');
             const totalCountSpan = document.getElementById('total-count');
@@ -711,7 +729,7 @@
             if (participants.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="4" class="text-center py-10 text-slate-400 bg-slate-50/20">
+                        <td colspan="5" class="text-center py-10 text-slate-400 bg-slate-50/20">
                             <div class="flex flex-col items-center justify-center space-y-2">
                                 <i class="fas fa-users text-3xl text-slate-300"></i>
                                 <p class="text-sm font-medium">尚未匯入或新增人員</p>
@@ -737,11 +755,14 @@
                             <input type="checkbox" class="w-4.5 h-4.5 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer" 
                                    ${person.selected ? 'checked' : ''} onchange="togglePersonSelection('${person.id}', this.checked)">
                         </td>
-                        <td class="px-6 py-3">
-                            <div class="font-medium text-slate-900">${escapeHTML(person.name)}</div>
+                        <td class="px-8 py-3">
+                            <div class="font-semibold text-slate-600">${escapeHTML(person.unit || '全校同仁')}</div>
                         </td>
-                        <td class="px-6 py-3">
-                            <div class="text-slate-500 font-mono text-xs flex items-center space-x-1.5">
+                        <td class="px-8 py-3">
+                            <div class="font-bold text-slate-900">${escapeHTML(person.name)}</div>
+                        </td>
+                        <td class="px-8 py-3">
+                            <div class="text-slate-500 font-mono text-sm flex items-center space-x-1.5">
                                 <i class="far fa-envelope text-slate-400 text-sm"></i>
                                 <span>${escapeHTML(person.email)}</span>
                             </div>
@@ -808,13 +829,21 @@
             form.classList.toggle('hidden');
         }
 
-        // Manually append a person to the array
+        // Manually append a person to the array (Unit, Name, Email)
         function addPerson() {
+            const unitInput = document.getElementById('new-unit');
             const nameInput = document.getElementById('new-name');
             const emailInput = document.getElementById('new-email');
 
+            const unit = unitInput.value.trim();
             const name = nameInput.value.trim();
             const email = emailInput.value.trim();
+
+            if (!unit) {
+                showToast("⚠️ 請輸入處室/單位！", "amber-500");
+                unitInput.focus();
+                return;
+            }
 
             if (!name) {
                 showToast("⚠️ 請輸入人員姓名！", "amber-500");
@@ -838,18 +867,20 @@
             // Add new element to beginning
             participants.unshift({
                 id: Date.now() + Math.random().toString(36).substr(2, 9),
+                unit: unit,
                 name: name,
                 email: email,
                 selected: true
             });
 
             // Reset Form Inputs
+            unitInput.value = '';
             nameInput.value = '';
             emailInput.value = '';
 
             renderTable();
             updateStepVisibility();
-            showToast(`✅ 已新增 ${name} 到名單中`, "emerald-400");
+            showToast(`✅ 已新增 [${unit}] ${name} 到名單中`, "emerald-400");
         }
 
         // Dynamic step progress updater
@@ -1049,13 +1080,13 @@
             document.body.removeChild(textArea);
         }
 
-        // Create CSV Content & Download Trigger for testing
+        // Create CSV Content & Download Trigger for testing (Updated with Unit)
         function downloadSampleFile() {
-            const sampleContent = "\ufeff" + "姓名,電子郵件(Email)\n" +
-                                 "王大明,taming.wang@example.com\n" +
-                                 "李美婷,meiting.lee@example.com\n" +
-                                 "林科特,tech.lin@example.com\n" +
-                                 "張小美,xiaomei.chang@example.com";
+            const sampleContent = "\ufeff" + "單位,姓名,中正信箱\n" +
+                                 "教務處,王大明,taming.wang@example.com\n" +
+                                 "學務處,李美婷,meiting.lee@example.com\n" +
+                                 "總務處,林科特,tech.lin@example.com\n" +
+                                 "輔導處,張小美,xiaomei.chang@example.com";
             
             const blob = new Blob([sampleContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
